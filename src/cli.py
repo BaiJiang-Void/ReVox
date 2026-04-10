@@ -5,6 +5,9 @@ import time
 import signal
 import atexit
 import argparse
+import urllib.request
+from pathlib import Path
+from tqdm import tqdm
 root_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if root_path not in sys.path:
     sys.path.insert(0, root_path)
@@ -49,6 +52,48 @@ def signal_handler(signum, frame):
     CLEANUP_TEMP = True
     cleanup_handler()
     sys.exit(0)
+
+class DownloadProgressBar(tqdm):
+    def update_to(self, b=1, bsize=1, tsize=None):
+        if tsize is not None:
+            self.total = tsize
+        self.update(b * bsize - self.n)
+
+def download_file(url, dest):
+    with DownloadProgressBar(unit='B', unit_scale=True, miniters=1, desc=os.path.basename(dest)) as t:
+        urllib.request.urlretrieve(url, dest, reporthook=t.update_to)
+
+def ensure_gfpgan_models():
+    GFPGAN_WEIGHTS_DIR = Path(__file__).parent / "gfpgan" / "weights"
+    GFPGAN_MODELS = {
+        "detection_Resnet50_Final.pth": {
+            "url": "https://github.com/xinntao/facexlib/releases/download/v0.1.0/detection_Resnet50_Final.pth",
+            "desc": "人脸检测模型"
+        },
+        "parsing_parsenet.pth": {
+            "url": "https://github.com/xinntao/facexlib/releases/download/v0.1.0/parsing_parsenet.pth",
+            "desc": "人脸解析模型"
+        }
+    }
+    GFPGAN_WEIGHTS_DIR.mkdir(parents=True, exist_ok=True)
+    missing = []
+    for filename, info in GFPGAN_MODELS.items():
+        if not (GFPGAN_WEIGHTS_DIR / filename).exists():
+            missing.append((filename, info))
+    if not missing:
+        logger.info("GFPGAN 模型已存在")
+        return True
+    logger.warning(f"缺失 {len(missing)} 个 GFPGAN 模型，开始下载...")
+    for filename, info in missing:
+        dest = GFPGAN_WEIGHTS_DIR / filename
+        logger.info(f"下载 {info['desc']}: {filename}")
+        try:
+            download_file(info["url"], str(dest))
+            logger.info(f"下载完成: {filename}")
+        except Exception as e:
+            logger.error(f"下载失败 {filename}: {e}")
+            return False
+    return True
 
 def main():
     global CLEANUP_TEMP
