@@ -70,13 +70,13 @@ SadTalker：ReVox会自动在同级目录寻找 SadTalker/。请确保 SadTalker
 
 \--method 用于手动选择增强模式（需要配合 --upscale）
 
-\--keep\_temp 用于保留临时文件
+\--keep\_temp 用于决定是否保留临时文件
 
-\--config 用于手动输入配置文件路径
+\--config 用于手动输入配置文件的路径
 
 配置文件：
 
-在config/default.yaml中存放着默认配置文件，系统在没有收到--config相关文件时会自动尝试调用默认配置文件
+在config/default.yaml中存放着默认配置文件，系统在没有收到--config相关文件时会自动尝试调用默认配置文件。
 
 
 
