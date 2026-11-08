@@ -11,7 +11,7 @@ def get_default_config():
         try:
             with open(default_yaml_path, 'r', encoding='utf-8') as f:
                 return yaml.safe_load(f) or {}
-        except:
+        except (OSError, UnicodeDecodeError, yaml.YAMLError):
             print(f"未成功加载{default_yaml_path}，使用内置配置")
             pass
     return {
